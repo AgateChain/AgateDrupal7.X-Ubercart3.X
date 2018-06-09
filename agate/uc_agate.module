@@ -1,0 +1,164 @@
+<?php
+/**
+ * @file
+ * Enabling payments via agate.services
+ */
+
+
+require_once("agate_lib.php");
+require_once("uc_agate.pages.inc");
+
+define ('AGATE_WEBSITE', "https://agate.services");
+define ('AGATE_ACCEPTED_LOGO_FILE', "/icon.png");
+define ('AGATE_ACCEPTED_LOGO_PATH', base_path() . drupal_get_path('module', 'uc_agate') . AGATE_ACCEPTED_LOGO_FILE);
+define ('AGATE_INVOICE_EXPIRATION_TIME', "15");
+
+/**
+ * Settings form for the Agate payment method module.
+ * Not directly hooked into by Ubercart; called by
+ * uc_payment_method_agate()
+ *
+ * @return array
+ */
+function uc_agate_settings_form()
+{
+    global $base_url;
+
+    $form          = array();
+    $form['admin'] = array(
+        '#type'        => 'fieldset',
+        '#title'       => t('Administrator settings'),
+        '#collapsible' => TRUE,
+        '#collapsed'   => TRUE,
+    );
+    $form['admin']['uc_agate_current_api_key'] = array(
+        '#type'          => 'textfield',
+        '#title'         => t('Enter Agate Signature'),
+        '#default_value' => variable_get('uc_agate_current_api_key', 'Please enter your signature'),
+        '#description'   => t('Your current Agate API key should be entered here. This key must be kept private. To view or edit your API keys, please go to your merchant account at') . ' <a href="' . AGATE_WEBSITE . '" target="_blank">' . t("Agate's website") . '</a>.',
+    );
+    return $form;
+}
+
+/**
+ * Implements hook_menu().
+ *
+ * @return array
+ */
+function uc_agate_menu()
+{
+    // Always accessible, accepts POST data from Agate's servers
+    // when being notified of status changes to an invoice.
+    $items = array();
+    $items["cart/uc_agate/callback"] = array(
+        'title'           => 'Agate Callback',
+        'access callback' => TRUE,
+        'page callback'   => 'uc_agate_callback',
+        'type'            => MENU_CALLBACK,
+        'file'            => 'uc_agate.pages.inc',
+    );
+
+    return $items;
+}
+
+
+/**
+ * Display help and module information
+ * @param path which path of the site we're displaying help
+ * @param arg array that holds the current path as would be returned from arg() function
+ * @return help text for the path
+ */
+function uc_agate_help($path, $arg)
+{
+    $o = '';  // declare your output variable
+    switch ($path)
+    {
+    case "admin/help#agate":
+        $o .= '<p>' . t('Implements the acceptance of payments through the') . " agate.services " . t('API.') . '</p>';
+        break;
+    }
+    return $o;
+} // end function - uc_agate_help
+
+
+/**
+ * Implements hook_uc_payment_method().
+ *
+ * @return array
+ */
+function uc_agate_uc_payment_method()
+{
+    // only show it if we aren't in debug mode, or are an admin
+    if ((!variable_get('uc_agate_debug_mode', 0) ||
+        user_access('access administration menu')))
+    {
+        $title = '<img src="' . AGATE_ACCEPTED_LOGO_PATH .
+            '" style="position:relative; top:5px; margin-right:6px;" />' .
+            t('Agate - pay with Agate.');
+
+        $methods[] = array(
+            'id'         => 'agate',
+            'name'       => t('agate'),
+            'title'      => $title,
+            'review'     => t('Agate'),
+            'desc'       => t('Make a payment using any standard currency.'),
+            'callback'   => 'uc_payment_method_agate',
+            'weight'     => 4,
+            'checkout'   => FALSE,
+            'no_gateway' => TRUE,
+        );
+
+        return $methods;
+
+    }
+    else
+    {
+        return array();
+    }
+}
+
+/**
+ * Payment method callback for the Agate payment method
+ *
+ * @param $op
+ * @param $order
+ */
+function uc_payment_method_agate($op, &$order)
+{
+  global $base_url;
+  global $user;
+    switch ($op)
+    {
+    case 'settings':
+        return uc_agate_settings_form();
+        break;
+
+    case 'cart-details':
+        $txt = t('After you click review order, You will be redirected to Agate\'s Payment Gateway where you can pay your Invoice');
+        $details = $txt;
+        //return $details;
+        return array('#markup' => $details);
+        break;
+    case 'cart-review':
+        agate_log("Entered Cart-Review");
+        $redirect_url   = url('cart/uc_agate/callback/',array('absolute' => TRUE));
+        $order_total    = uc_order_get_total($order);
+        $baseUri        = "http://gateway.agate.services/" ;
+        $convertUrl     = "http://gateway.agate.services/convert/";
+        $api_key        = variable_get('uc_agate_current_api_key');
+        $currencySymbol = $order->currency_code;
+
+        $amount_iUSD = convertCurToIUSD($convertUrl, $order_total, $api_key, $currencySymbol);
+
+        echo redirectPayment($baseUri, $amount_iUSD, $order_total, $currencySymbol, $api_key, $redirect_url);
+
+        $review[] = t('Payable Amount :') . $amount_iUSD.'<br />'.t('Please click on submit order.'.
+        'You will be redirected to Agate\'s Payment Gateway where you can pay your Invoice'.'<br />'.
+        'NOTE: You will only get 10 mins to submit your order and Pay the Invoice.');
+        return $review;
+        break;
+    case 'order-submit':
+    case 'customer-view':
+        break;
+    }
+} // end function - uc_payment_method_agate

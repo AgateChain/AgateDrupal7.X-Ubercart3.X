@@ -1,0 +1,71 @@
+<?php
+/**
+ * @file
+ * uc_agate.install
+ *
+ * Installation file for the Agate payment module for Ubercart
+ */
+
+/**
+ * Implementation of hook_requirements().
+ *
+ * @param $phase
+ *
+ * @return array
+ */
+function uc_agate_requirements($phase)
+{
+    $t = get_t();
+
+    // Agate's provided API code requires cURL.
+    $has_curl = function_exists('curl_init');
+    //initialize requirements
+    $requirements = array();
+    if (variable_get('uc_payment_method_agate_checkout', FALSE))
+    {
+        $requirements['uc_agate_curl'] = array(
+            'title' => $t('cURL'),
+            'value' => $has_curl ? $t('Enabled') : $t('Not found'),
+        );
+        if (!$has_curl)
+        {
+            $requirements['uc_agate_curl']['severity'] = REQUIREMENT_ERROR;
+            $requirements['uc_agate_curl']['description'] = $t("Agate requires the PHP <a href='!curl_url'>cURL</a> library.", array('!curl_url' => 'http://php.net/manual/en/curl.setup.php'));
+        }
+    }
+
+    return $requirements;
+}
+
+/**
+ * Implementation of hook_install().
+ *
+ * Installs the Agate module; particularly, installs the database
+ * schema and alters orders statuses to include 'Agate pending'.
+ */
+function uc_agate_install()
+{
+    // Set the module weight so it can override other modules.
+
+    db_update('system')
+        ->fields(array(
+            'weight' => 99,
+        ))
+        ->condition('name', 'agate')
+        ->execute();
+}
+
+
+/**
+ * Implementation of hook_uninstall()
+ *
+ * Uninstalls the Agate module.
+ */
+function uc_agate_uninstall()
+{
+    // Remove relevant data from the DB
+
+    db_delete('variable')
+        ->condition('name', 'uc_agate_%%', 'LIKE')
+        ->execute();
+}

@@ -1,0 +1,8 @@
+name = "Agate"
+description = "Enables for payment via agate.services's API."
+dependencies[] = uc_payment
+files[] = uc_agate.module
+files[] = uc_agate.pages.inc
+files[] = uc_agate.install
+package = Ubercart - payment
+core = 7.x
