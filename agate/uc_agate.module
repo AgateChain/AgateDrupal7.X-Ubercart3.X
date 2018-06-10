@@ -146,7 +146,7 @@ function uc_payment_method_agate($op, &$order)
         $baseUri        = "http://gateway.agate.services/" ;
         $convertUrl     = "http://gateway.agate.services/convert/";
         $api_key        = variable_get('uc_agate_current_api_key');
-        $currencySymbol = $order->currency_code;
+        $currencySymbol = $order->currency;
 
         $amount_iUSD = convertCurToIUSD($convertUrl, $order_total, $api_key, $currencySymbol);
 
