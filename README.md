@@ -22,3 +22,8 @@ Save your changes and you're good to go!
 When a client chooses the Agate payment method, they will be presented with an invoice showing a button they will have to click on in order to pay their order.  Upon requesting to pay their order, the system takes the client to a full-screen Agate invoice page where the client is presented with payment instructions.  Once payment is received, a link is presented to the shopper that will return them to your website.
 
 **Note:** Don't worry!  A payment will automatically update your Ubercart store whether or not the customer returns to your website after they've paid the invoice.
+
+Try How It Works ?
+====================
+
+We have created a demo website for you to test the plugin, feel free to visit [here](http://www.drupal7.agate.services) .
