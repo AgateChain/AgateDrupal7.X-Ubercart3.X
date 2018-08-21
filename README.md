@@ -26,4 +26,4 @@ When a client chooses the Agate payment method, they will be presented with an i
 Try How It Works ?
 ====================
 
-We have created a demo website for you to test the plugin, feel free to visit [here](http://www.drupal7.agate.services) .
+We have created a demo website for you to test the plugin, feel free to visit [here](http://www.drupal7.agate.services) and enjoy the live experience.
