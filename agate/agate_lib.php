@@ -6,7 +6,7 @@ function agate_log($contents)
     error_log($contents);
 }
 
-// Convert the IRR currency to equivalent amount
+// Convert currency to equivalent iUSD
 function convertCurToIUSD($url, $amount, $api_key, $currencySymbol) {
    error_log("Entered into Convert CAmount");
    error_log($url.'?api_key='.$api_key.'&currency='.$currencySymbol.'&amount='. $amount);
